@@ -15,9 +15,9 @@
 - [x] Initial empty commit on `main`
 - [x] `develop` branch created from `main`
 - [x] `feature/day-0-setup` branch created from `develop`
-- [ ] GitHub repository created (`financial-documents-rag`, public)
-- [ ] `main` and `develop` pushed to remote
-- [ ] `feature/day-0-setup` pushed to remote
+- [x] GitHub repository created (`financial-documents-rag`, public)
+- [x] `main` and `develop` pushed to remote
+- [x] `feature/day-0-setup` pushed to remote
 
 ### Virtual Environment
 
@@ -51,8 +51,8 @@
 ### GitHub Setup
 
 - [ ] Repository created as public
-- [ ] 5 Milestones created (M1–M5)
-- [ ] 25 atomic issues created and assigned to milestones
+- [x] 5 Milestones created (M1–M5)
+- [x] 25 atomic issues created and assigned to milestones
 
 ---
 
