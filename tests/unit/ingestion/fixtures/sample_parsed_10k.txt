@@ -1,0 +1,72 @@
+UNITED STATES SECURITIES AND EXCHANGE COMMISSION
+Washington, D.C. 20549
+FORM 10-K
+ANNUAL REPORT PURSUANT TO SECTION 13 OR 15(d) OF THE SECURITIES EXCHANGE ACT OF 1934
+For the fiscal year ended December 31, 2023
+
+SAMPLE FINANCIAL CORP.
+
+ITEM 1. BUSINESS
+
+Sample Financial Corp. is an enterprise technology company providing cloud infrastructure,
+analytics, and AI-powered workflow automation software for financial institutions globally.
+The company was founded in 2018 and has expanded its operations to over 25 countries.
+
+Our products include CorePlatform, DataStream Engine, and ComplianceSuite. We serve over
+1,500 enterprise customers, primarily Tier-1 banks, investment managers, and fintechs.
+
+ITEM 1A. RISK FACTORS
+
+Our business, financial condition, and results of operations could be materially and adversely
+affected by the following risks:
+
+Macroeconomic Volatility: Global economic downturns, inflation, and changing interest rates
+may cause our clients to reduce or defer spending on financial software technologies.
+
+Cybersecurity and Data Privacy: We process sensitive financial data. Security breaches,
+ransomware attacks, or unauthorized data access could harm our reputation and operations.
+
+ITEM 1B. UNRESOLVED STAFF COMMENTS
+
+None.
+
+ITEM 2. PROPERTIES
+
+Our corporate headquarters is located in San Francisco, California, consisting of approximately
+100,000 square feet under a lease expiring in 2030. We also maintain leased regional offices in
+New York, London, and Singapore.
+
+ITEM 7. MANAGEMENT'S DISCUSSION AND ANALYSIS OF FINANCIAL CONDITION AND RESULTS OF OPERATIONS
+
+Overview
+Total revenue for fiscal year 2023 was $450.5 million, representing an increase of 22% compared
+to $369.2 million in fiscal year 2022. Subscription revenue accounted for 88% of total revenue.
+
+Operating Results
+Gross margin improved to 76% from 73% in the prior year, driven by economies of scale in our cloud
+infrastructure and higher customer net retention rates of 118%.
+
+Liquidity and Capital Resources
+As of December 31, 2023, we had cash, cash equivalents, and short-term investments of $185.0 million.
+We believe our existing cash balances will be sufficient to meet working capital requirements for at
+least the next 12 months.
+
+ITEM 7A. QUANTITATIVE AND QUALITATIVE DISCLOSURES ABOUT MARKET RISK
+
+Interest Rate Risk: We hold a portfolio of cash equivalents and short-term marketable securities. A
+hypothetical 100 basis point increase in interest rates would not have a material impact on earnings.
+
+Foreign Exchange Risk: We conduct business internationally and are exposed to foreign currency
+fluctuations, primarily the Euro, British Pound, and Japanese Yen.
+
+ITEM 8. FINANCIAL STATEMENTS AND SUPPLEMENTARY DATA
+
+Report of Independent Registered Public Accounting Firm
+Consolidated Balance Sheets as of December 31, 2023 and 2022
+Consolidated Statements of Operations for each of the three years in the period ended December 31, 2023
+Consolidated Statements of Cash Flows for each of the three years in the period ended December 31, 2023
+Notes to Consolidated Financial Statements.
+
+ITEM 9. CHANGES IN AND DISAGREEMENTS WITH ACCOUNTANTS ON ACCOUNTING AND FINANCIAL DISCLOSURE
+
+None.

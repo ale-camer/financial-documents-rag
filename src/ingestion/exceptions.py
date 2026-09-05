@@ -41,3 +41,7 @@ class FilingDownloadError(EdgarClientError):
 
 class ParserError(EdgarClientError):
     """Raised when parsing or decoding a filing document fails."""
+
+
+class SectionExtractionError(EdgarClientError):
+    """Raised when extracting structured sections from a document fails."""
