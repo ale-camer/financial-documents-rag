@@ -14,6 +14,7 @@ from src.ingestion.exceptions import (
 )
 from src.ingestion.filing_downloader import FilingDownloader
 from src.ingestion.html_parser import TenKParser
+from src.ingestion.models import FilingMetadata, ParsedDocument, ParsedSection
 from src.ingestion.rate_limiter import AsyncTokenBucket
 from src.ingestion.section_extractor import SectionExtractor
 
@@ -26,8 +27,11 @@ __all__ = [
     "EdgarRequestError",
     "FilingDownloadError",
     "FilingDownloader",
+    "FilingMetadata",
     "FilingNotFoundError",
     "InvalidUserAgentError",
+    "ParsedDocument",
+    "ParsedSection",
     "ParserError",
     "SectionExtractionError",
     "SectionExtractor",
