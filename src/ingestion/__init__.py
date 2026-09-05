@@ -9,8 +9,10 @@ from src.ingestion.exceptions import (
     FilingDownloadError,
     FilingNotFoundError,
     InvalidUserAgentError,
+    ParserError,
 )
 from src.ingestion.filing_downloader import FilingDownloader
+from src.ingestion.html_parser import TenKParser
 from src.ingestion.rate_limiter import AsyncTokenBucket
 
 __all__ = [
@@ -24,4 +26,6 @@ __all__ = [
     "FilingDownloader",
     "FilingNotFoundError",
     "InvalidUserAgentError",
+    "ParserError",
+    "TenKParser",
 ]

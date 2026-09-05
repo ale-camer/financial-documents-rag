@@ -37,3 +37,7 @@ class FilingNotFoundError(EdgarClientError):
 
 class FilingDownloadError(EdgarClientError):
     """Raised when downloading or saving a filing document fails."""
+
+
+class ParserError(EdgarClientError):
+    """Raised when parsing or decoding a filing document fails."""
