@@ -1,0 +1,67 @@
+{
+  "cik": "0000320193",
+  "entityType": "operating",
+  "sic": "3571",
+  "sicDescription": "Electronic Computers",
+  "name": "Apple Inc.",
+  "tickers": ["AAPL"],
+  "exchanges": ["Nasdaq"],
+  "ein": "942404110",
+  "category": "Large accelerated filer",
+  "fiscalYearEnd": "0930",
+  "stateOfIncorporation": "CA",
+  "filings": {
+    "recent": {
+      "accessionNumber": [
+        "0000320193-23-000106",
+        "0000320193-23-000077",
+        "0000320193-23-000070",
+        "0000320193-22-000108"
+      ],
+      "filingDate": [
+        "2023-11-03",
+        "2023-08-04",
+        "2023-06-05",
+        "2022-10-28"
+      ],
+      "reportDate": [
+        "2023-09-30",
+        "2023-07-01",
+        "2023-06-05",
+        "2022-09-24"
+      ],
+      "acceptanceDateTime": [
+        "2023-11-03T18:08:27.000Z",
+        "2023-08-04T18:05:12.000Z",
+        "2023-06-05T16:30:00.000Z",
+        "2022-10-28T18:01:14.000Z"
+      ],
+      "act": ["34", "34", "34", "34"],
+      "form": [
+        "10-K",
+        "10-Q",
+        "8-K",
+        "10-K"
+      ],
+      "fileNumber": ["001-36743", "001-36743", "001-36743", "001-36743"],
+      "filmNumber": ["231376330", "231144220", "231012345", "221340001"],
+      "items": ["", "", "5.02", ""],
+      "size": [1034234, 521400, 102000, 998000],
+      "isXBRL": [1, 1, 1, 1],
+      "isInlineXBRL": [1, 1, 1, 1],
+      "primaryDocument": [
+        "aapl-20230930.htm",
+        "aapl-20230701.htm",
+        "aapl-20230605.htm",
+        "aapl-20220924.htm"
+      ],
+      "primaryDocDescription": [
+        "10-K",
+        "10-Q",
+        "8-K",
+        "10-K"
+      ]
+    },
+    "files": []
+  }
+}

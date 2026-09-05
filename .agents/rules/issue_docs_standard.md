@@ -11,7 +11,7 @@ described below. This applies to any agent creating a `docs/issue_N_*.md` file.
 docs/issue_{N}_{short_slug}.md
 ```
 
-Examples: `issue_1_edgar_client.md`, `issue_6_chunker.md`.
+Examples: `issue_1_edgar_client.md`, `issue_2_filing_downloader.md`, `issue_6_chunker.md`.
 
 ---
 
@@ -34,12 +34,19 @@ Exact shell commands to:
 2. Create the feature branch.
 
 ### Section 2 — Configure Dependencies
-If the issue adds runtime dependencies:
-- Show the **exact diff** to apply in `pyproject.toml` (use a `diff` code block).
-- Show the shell commands to activate `.venv` and reinstall with `pip install -e ".[dev]"`.
-- Include a one-liner verification command (`python -c "import pkg; ..."`).
+This section is **MANDATORY** for every issue (never omit it). It must always include:
 
-If no new dependencies are needed, omit this section.
+1. **`2.1 Dependencies in pyproject.toml`**:
+   - If third-party runtime dependencies are added, show the **exact diff** in `pyproject.toml` (using a `diff` code block).
+   - If modules used are part of Python's Standard Library (e.g. `pathlib`, `json`, `asyncio`, `typing`), explicitly state that they are built-ins included with Python >= 3.11 and do **not** require any entry in `pyproject.toml`. Show the current `dependencies` block to confirm.
+2. **`2.2 Install into the virtual environment`**:
+   - Always include the activation and installation commands:
+     ```bash
+     source .venv/bin/activate
+     pip install -e ".[dev]"
+     ```
+3. **`2.3 Verification`**:
+   - Include a one-liner verification command (`python -c "import ..."`).
 
 ### Section 3 — Development
 One subsection per file to create or modify, in dependency order.
@@ -82,4 +89,5 @@ A checklist of the minimum passing conditions before the PR can be merged:
 - Use `diff` code blocks for file changes to show exact lines added/removed.
 - Avoid full implementation code in the doc — describe contracts and behavior only.
 - Keep section headers consistent with the canonical names above.
+- Section 2 is always required with explicit dependency instructions and virtual environment install commands.
 - Use `> [!NOTE]` or `> [!IMPORTANT]` alerts sparingly for critical side-notes.

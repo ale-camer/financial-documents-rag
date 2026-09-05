@@ -29,3 +29,11 @@ class EdgarAPIError(EdgarClientError):
 
 class EdgarRequestError(EdgarClientError):
     """Raised when a network transport or timeout error persists after retries."""
+
+
+class FilingNotFoundError(EdgarClientError):
+    """Raised when no filings match the requested criteria."""
+
+
+class FilingDownloadError(EdgarClientError):
+    """Raised when downloading or saving a filing document fails."""

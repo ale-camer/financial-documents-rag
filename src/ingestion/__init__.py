@@ -6,8 +6,11 @@ from src.ingestion.exceptions import (
     EdgarClientError,
     EdgarRateLimitError,
     EdgarRequestError,
+    FilingDownloadError,
+    FilingNotFoundError,
     InvalidUserAgentError,
 )
+from src.ingestion.filing_downloader import FilingDownloader
 from src.ingestion.rate_limiter import AsyncTokenBucket
 
 __all__ = [
@@ -17,5 +20,8 @@ __all__ = [
     "EdgarClientError",
     "EdgarRateLimitError",
     "EdgarRequestError",
+    "FilingDownloadError",
+    "FilingDownloader",
+    "FilingNotFoundError",
     "InvalidUserAgentError",
 ]
