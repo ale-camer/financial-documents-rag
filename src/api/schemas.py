@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class QueryRequest(BaseModel):
@@ -11,6 +11,17 @@ class QueryRequest(BaseModel):
     query: str = Field(..., description="The user's question")
     filters: dict[str, Any] | None = Field(
         default=None, description="Metadata filters (e.g., ticker)"
+    )
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "examples": [
+                {
+                    "query": "¿Cuáles son los riesgos asociados a la cadena de suministro?",
+                    "filters": {"ticker": "AAPL"}
+                }
+            ]
+        }
     )
 
 
@@ -32,3 +43,31 @@ class IngestRequest(BaseModel):
 
     ticker: str = Field(..., description="Company ticker")
     form_type: str = Field(default="10-K", description="Form type")
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "examples": [
+                {
+                    "ticker": "AAPL",
+                    "form_type": "10-K"
+                }
+            ]
+        }
+    )
+
+
+class HealthResponse(BaseModel):
+    """Response schema for the health check endpoint."""
+
+    status: str = Field(..., description="Service status", examples=["ok"])
+
+
+class IngestResponse(BaseModel):
+    """Response schema for document ingestion endpoint."""
+
+    status: str = Field(..., description="Ingestion status", examples=["accepted"])
+    message: str = Field(
+        ...,
+        description="Detailed status message",
+        examples=["Ingestion started in background for ticker AAPL"],
+    )

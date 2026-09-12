@@ -15,7 +15,13 @@ from src.api.dependencies import (
     get_vector_store,
 )
 from src.api.logging import setup_logging
-from src.api.schemas import IngestRequest, QueryRequest, QueryResponse
+from src.api.schemas import (
+    HealthResponse,
+    IngestRequest,
+    IngestResponse,
+    QueryRequest,
+    QueryResponse,
+)
 from src.indexing.pipeline import IndexingPipeline
 from src.ingestion.edgar_client import EdgarClient
 from src.ingestion.filing_downloader import FilingDownloader
@@ -40,10 +46,26 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         await vector_store.close()
 
 
+tags_metadata = [
+    {
+        "name": "System",
+        "description": "System level operations like health checks.",
+    },
+    {
+        "name": "RAG Queries",
+        "description": "Endpoints to query the indexed financial documents using RAG.",
+    },
+    {
+        "name": "Ingestion",
+        "description": "Background pipelines for downloading and indexing SEC filings.",
+    },
+]
+
 app = FastAPI(
     title="Financial Documents RAG",
     description="RAG API for querying SEC 10-K filings.",
     version="1.0.0",
+    openapi_tags=tags_metadata,
     lifespan=lifespan,
 )
 
@@ -60,13 +82,13 @@ async def log_requests(request: Request, call_next):
     return response
 
 
-@app.get("/health")
-async def health_check() -> dict[str, str]:
+@app.get("/health", tags=["System"], response_model=HealthResponse)
+async def health_check() -> HealthResponse:
     """Return a basic health check response."""
-    return {"status": "ok"}
+    return HealthResponse(status="ok")
 
 
-@app.post("/query", response_model=QueryResponse)
+@app.post("/query", tags=["RAG Queries"], response_model=QueryResponse)
 async def query_documents(
     request: QueryRequest,
     pipeline: RAGPipeline = Depends(get_rag_pipeline),
@@ -145,14 +167,14 @@ async def run_ingestion_pipeline(
         logger.exception(f"Error during ingestion pipeline for {ticker}: {e}")
 
 
-@app.post("/ingest", status_code=202)
+@app.post("/ingest", tags=["Ingestion"], response_model=IngestResponse, status_code=202)
 async def ingest_document(
     request: IngestRequest,
     background_tasks: BackgroundTasks,
     edgar_client: EdgarClient = Depends(get_edgar_client),
     downloader: FilingDownloader = Depends(get_filing_downloader),
     pipeline: IndexingPipeline = Depends(get_indexing_pipeline),
-) -> dict[str, str]:
+) -> IngestResponse:
     """Trigger the ingestion pipeline for a ticker."""
     try:
         cik = await edgar_client.get_cik_from_ticker(request.ticker)
@@ -167,7 +189,7 @@ async def ingest_document(
         pipeline=pipeline,
     )
     
-    return {
-        "status": "accepted",
-        "message": f"Ingestion started in background for ticker {request.ticker.upper()}",
-    }
+    return IngestResponse(
+        status="accepted",
+        message=f"Ingestion started in background for ticker {request.ticker.upper()}",
+    )
