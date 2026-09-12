@@ -26,6 +26,8 @@ dependencies = [
     "langchain>=0.3.0",
     "langchain-core>=0.3.0",
     "langchain-openai>=0.2.0",
+    "fastapi>=0.111.0",
+    "uvicorn>=0.30.0",
 ]
 
 [project.optional-dependencies]
@@ -51,6 +53,9 @@ ignore = []
 
 [tool.ruff.lint.isort]
 known-first-party = ["src"]
+
+[tool.ruff.lint.flake8-bugbear]
+extend-immutable-calls = ["fastapi.Depends", "fastapi.Query", "fastapi.Path", "fastapi.Body"]
 
 # ── Mypy ─────────────────────────────────────────────────────────────────────
 [tool.mypy]
