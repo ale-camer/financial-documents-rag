@@ -1,15 +1,17 @@
 """FastAPI application initialization and endpoints."""
 
 import logging
+import time
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, Request
 
 from src.api.dependencies import get_rag_pipeline, get_vector_store
 from src.api.schemas import IngestRequest, QueryRequest, QueryResponse
 from src.rag.citations import format_answer_with_citations
 from src.rag.pipeline import RAGPipeline
+from src.api.logging import setup_logging
 
 logger = logging.getLogger(__name__)
 
@@ -17,6 +19,7 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Manage application lifespan events like opening/closing database connections."""
+    setup_logging()
     vector_store = get_vector_store()
     try:
         await vector_store.open()
@@ -31,6 +34,18 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan,
 )
+
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    """Log HTTP request latency and status."""
+    start_time = time.time()
+    response = await call_next(request)
+    process_time = time.time() - start_time
+    logger.info(
+        f"{request.method} {request.url.path} - Status: {response.status_code} - Latency: {process_time:.4f}s"
+    )
+    return response
 
 
 @app.get("/health")
