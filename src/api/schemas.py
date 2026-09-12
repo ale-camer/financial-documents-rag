@@ -17,8 +17,8 @@ class QueryRequest(BaseModel):
         json_schema_extra={
             "examples": [
                 {
-                    "query": "¿Cuáles son los riesgos asociados a la cadena de suministro?",
-                    "filters": {"ticker": "AAPL"}
+                    "query": "Riesgos en cadena de suministro?",
+                    "filters": {"ticker": "AAPL"},
                 }
             ]
         }
@@ -45,14 +45,7 @@ class IngestRequest(BaseModel):
     form_type: str = Field(default="10-K", description="Form type")
 
     model_config = ConfigDict(
-        json_schema_extra={
-            "examples": [
-                {
-                    "ticker": "AAPL",
-                    "form_type": "10-K"
-                }
-            ]
-        }
+        json_schema_extra={"examples": [{"ticker": "AAPL", "form_type": "10-K"}]}
     )
 
 

@@ -2,10 +2,10 @@
 
 import logging
 import time
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Awaitable, Callable
 from contextlib import asynccontextmanager
 
-from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, Request
+from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, Request, Response
 
 from src.api.dependencies import (
     get_edgar_client,
@@ -71,13 +71,16 @@ app = FastAPI(
 
 
 @app.middleware("http")
-async def log_requests(request: Request, call_next):
+async def log_requests(
+    request: Request, call_next: Callable[[Request], Awaitable[Response]]
+) -> Response:
     """Log HTTP request latency and status."""
     start_time = time.time()
     response = await call_next(request)
     process_time = time.time() - start_time
     logger.info(
-        f"{request.method} {request.url.path} - Status: {response.status_code} - Latency: {process_time:.4f}s"
+        f"{request.method} {request.url.path} - "
+        f"Status: {response.status_code} - Latency: {process_time:.4f}s"
     )
     return response
 
@@ -133,10 +136,10 @@ async def run_ingestion_pipeline(
 
         for path in paths:
             accession_number = path.stem
-            
+
             # 1. Parse HTML
             html_text = parser.parse_file(path)
-            
+
             # 2. Extract Sections
             sections_dict = extractor.extract_sections(html_text)
 
@@ -180,7 +183,7 @@ async def ingest_document(
         cik = await edgar_client.get_cik_from_ticker(request.ticker)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
-        
+
     background_tasks.add_task(
         run_ingestion_pipeline,
         ticker=request.ticker.upper(),
@@ -188,7 +191,7 @@ async def ingest_document(
         downloader=downloader,
         pipeline=pipeline,
     )
-    
+
     return IngestResponse(
         status="accepted",
         message=f"Ingestion started in background for ticker {request.ticker.upper()}",

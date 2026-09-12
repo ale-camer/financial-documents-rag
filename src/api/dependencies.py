@@ -1,9 +1,10 @@
 """Dependency injection for FastAPI endpoints."""
 
+import os
 from functools import lru_cache
 
-from src.indexing.embeddings import EmbeddingService
 from src.indexing.chunker import SectionAwareChunker
+from src.indexing.embeddings import EmbeddingService
 from src.indexing.pipeline import IndexingPipeline
 from src.ingestion.edgar_client import EdgarClient
 from src.ingestion.filing_downloader import FilingDownloader
@@ -11,7 +12,6 @@ from src.rag.generator import RAGGenerator
 from src.rag.pipeline import RAGPipeline
 from src.rag.retriever import HybridRetriever, KeywordRetriever, SemanticRetriever
 from src.storage.vector_store import VectorStoreClient
-import os
 
 
 @lru_cache
