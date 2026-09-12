@@ -6,6 +6,7 @@ from collections.abc import AsyncGenerator, Awaitable, Callable
 from contextlib import asynccontextmanager
 
 from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, Request, Response
+from prometheus_fastapi_instrumentator import Instrumentator
 
 from src.api.dependencies import (
     get_edgar_client,
@@ -68,6 +69,9 @@ app = FastAPI(
     openapi_tags=tags_metadata,
     lifespan=lifespan,
 )
+
+# Initialize Prometheus instrumentation
+Instrumentator().instrument(app).expose(app)
 
 
 @app.middleware("http")
