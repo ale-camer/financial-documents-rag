@@ -1,0 +1,12 @@
+[
+  {
+    "question": "¿Cuáles son los principales factores de riesgo asociados a la cadena de suministro según el 10-K?",
+    "ground_truth": "Los principales factores de riesgo incluyen la dependencia de proveedores únicos o limitados, disrupciones logísticas, escasez de componentes, y el impacto de tensiones geopolíticas y aranceles comerciales que pueden encarecer los costos de producción.",
+    "context": "The Company’s operations depend on the global supply chain. Reliance on single or limited-source suppliers subjects the Company to potential shortages. Furthermore, geopolitical tensions, trade tariffs, and logistics disruptions can increase component costs or delay manufacturing."
+  },
+  {
+    "question": "¿Cómo impacta la fluctuación de la moneda extranjera en los ingresos de la empresa?",
+    "ground_truth": "Las fluctuaciones de las monedas extranjeras frente al dólar estadounidense afectan negativamente los ingresos reportados de la empresa cuando el dólar se fortalece, ya que los ingresos generados internacionalmente valen menos al convertirse a dólares.",
+    "context": "The Company generates a significant portion of its net sales from international operations. A strengthening of the U.S. dollar relative to foreign currencies negatively impacts the Company's reported net sales, as international revenues translate into fewer U.S. dollars."
+  }
+]

@@ -1,65 +1,93 @@
-"""Basic evaluation script for the RAG pipeline using LangSmith."""
+"""Evaluation script for RAG quality using LangSmith."""
 
 import asyncio
-import logging
+import json
 import os
 import sys
+from pathlib import Path
 
-# Ensure src is in the python path
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-from src.rag.generator import RAGGenerator
-from src.rag.pipeline import RAGPipeline
-from src.rag.retriever import HybridRetriever
-from src.storage.vector_store import VectorStoreClient
+from langsmith import Client
+from langsmith.evaluation import evaluate
+from src.api.dependencies import get_rag_pipeline
 
 
-async def evaluate() -> None:
-    """Run a basic evaluation of the RAG pipeline."""
-    print("Setting up RAG Pipeline for evaluation...")
-    logging.basicConfig(level=logging.INFO)
+async def predict_rag_answer(inputs: dict) -> dict:
+    """Run the RAG pipeline for a given question."""
+    pipeline = get_rag_pipeline()
+    question = inputs["question"]
+    # We use empty filters for generic evaluation
+    result = await pipeline.ask(query=question, filters=None)
+    return {"answer": result["answer"]}
 
-    # LangSmith tracing is automatically enabled if LANGCHAIN_TRACING_V2=true
-    # and LANGCHAIN_API_KEY is provided in the environment.
 
-    vector_store = VectorStoreClient()
+def run_evaluation() -> None:
+    """Run the LangSmith evaluation."""
+    # Ensure API keys are set
+    if not os.getenv("LANGCHAIN_API_KEY") or not os.getenv("OPENAI_API_KEY"):
+        print("Error: LANGCHAIN_API_KEY and OPENAI_API_KEY must be set.")
+        sys.exit(1)
 
-    # Connect to vector store
-    await vector_store.open()
+    # Load the ground truth dataset
+    dataset_path = Path("tests/evaluation/dataset.json")
+    if not dataset_path.exists():
+        print(f"Dataset not found at {dataset_path}")
+        sys.exit(1)
 
+    with open(dataset_path, "r", encoding="utf-8") as f:
+        examples = json.load(f)
+
+    client = Client()
+    dataset_name = "Financial RAG Evals"
+
+    # Create dataset in LangSmith if it doesn't exist
     try:
-        retriever = HybridRetriever(vector_store)
-        generator = RAGGenerator()
-        pipeline = RAGPipeline(retriever=retriever, generator=generator)
+        client.read_dataset(dataset_name=dataset_name)
+        print(f"Dataset '{dataset_name}' already exists in LangSmith.")
+    except Exception:
+        print(f"Creating dataset '{dataset_name}' in LangSmith...")
+        dataset = client.create_dataset(dataset_name=dataset_name)
+        for ex in examples:
+            client.create_example(
+                inputs={"question": ex["question"]},
+                outputs={"ground_truth": ex["ground_truth"]},
+                dataset_id=dataset.id,
+            )
 
-        test_questions = [
-            "What are the main risk factors mentioned in the latest 10-K?",
-            "How did the company's revenue change compared to the previous year?",
-            "What is the company's strategy for growth?",
-        ]
+    # Define a simple custom evaluator
+    def llm_judge(run, example) -> dict:
+        """Evaluate if the answer matches ground truth."""
+        try:
+            from langchain_openai import ChatOpenAI
+            llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+            expected = example.outputs.get("ground_truth", "")
+            actual = run.outputs.get("answer", "")
+            prompt = (
+                f"Expected Answer: {expected}\n"
+                f"Actual Answer: {actual}\n"
+                "Does the actual answer contain the core information of the expected answer? "
+                "Reply ONLY with YES or NO."
+            )
+            response = llm.invoke(prompt)
+            score = 1 if "YES" in response.content.upper() else 0
+            return {"key": "correctness", "score": score}
+        except Exception as e:
+            print(f"Evaluator error: {e}")
+            return {"key": "correctness", "score": 0}
 
-        for q in test_questions:
-            print(f"\n[{'='*50}]")
-            print(f"Question: {q}")
+    # Wrap the async predict function in a sync wrapper for the evaluate function
+    def sync_predict(inputs: dict) -> dict:
+        return asyncio.run(predict_rag_answer(inputs))
 
-            try:
-                result = await pipeline.ask(query=q)
-                print(f"\nAnswer:\n{result['answer']}")
-
-                print(f"\nRetrieved Documents ({len(result['source_documents'])} chunks):")
-                for doc in result["source_documents"]:
-                    section = doc.section_name or "Unknown"
-                    print(
-                        f" - [Document {doc.document_id}] Section: {section} "
-                        f"(Similarity: {doc.similarity:.2f})"
-                    )
-            except Exception as e:
-                print(f"Error evaluating question: {e}")
-
-    finally:
-        await vector_store.close()
-        print("\nEvaluation complete.")
+    # Run evaluation
+    print("Starting evaluation...")
+    evaluate(
+        sync_predict,
+        data=dataset_name,
+        evaluators=[llm_judge],
+        experiment_prefix="rag-quality-test",
+    )
+    print("Evaluation completed! Check your LangSmith dashboard.")
 
 
 if __name__ == "__main__":
-    asyncio.run(evaluate())
+    run_evaluation()
