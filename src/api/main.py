@@ -5,13 +5,25 @@ import time
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
-from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, Request
 
-from src.api.dependencies import get_rag_pipeline, get_vector_store
+from src.api.dependencies import (
+    get_edgar_client,
+    get_filing_downloader,
+    get_indexing_pipeline,
+    get_rag_pipeline,
+    get_vector_store,
+)
+from src.api.logging import setup_logging
 from src.api.schemas import IngestRequest, QueryRequest, QueryResponse
+from src.indexing.pipeline import IndexingPipeline
+from src.ingestion.edgar_client import EdgarClient
+from src.ingestion.filing_downloader import FilingDownloader
+from src.ingestion.html_parser import TenKParser
+from src.ingestion.models import FilingMetadata, ParsedDocument, ParsedSection
+from src.ingestion.section_extractor import SectionExtractor
 from src.rag.citations import format_answer_with_citations
 from src.rag.pipeline import RAGPipeline
-from src.api.logging import setup_logging
 
 logger = logging.getLogger(__name__)
 
@@ -80,8 +92,82 @@ async def query_documents(
         raise HTTPException(status_code=500, detail="Internal server error") from e
 
 
-@app.post("/ingest")
-async def ingest_document(request: IngestRequest) -> dict[str, str]:
-    """Trigger the ingestion pipeline for a ticker (stub for now)."""
-    # TODO: Implement the actual ingestion pipeline integration
-    return {"status": "accepted", "message": f"Ingestion started for {request.ticker}"}
+async def run_ingestion_pipeline(
+    ticker: str,
+    cik: str,
+    downloader: FilingDownloader,
+    pipeline: IndexingPipeline,
+) -> None:
+    """Background task to run the full ingestion and indexing flow."""
+    try:
+        logger.info(f"Starting background ingestion for {ticker} (CIK {cik})")
+        paths = await downloader.download_recent_10k(cik, limit=1)
+        if not paths:
+            logger.error(f"No 10-K filings found for CIK {cik}")
+            return
+
+        parser = TenKParser()
+        extractor = SectionExtractor()
+
+        for path in paths:
+            accession_number = path.stem
+            
+            # 1. Parse HTML
+            html_text = parser.parse_file(path)
+            
+            # 2. Extract Sections
+            sections_dict = extractor.extract_sections(html_text)
+
+            # 3. Create Models
+            metadata = FilingMetadata(
+                cik=cik,
+                ticker=ticker,
+                period="2023-12-31",  # Placeholder period
+                accession_number=accession_number,
+                form_type="10-K",
+            )
+
+            parsed_sections = [
+                ParsedSection(section_name=name, raw_text=text)
+                for name, text in sections_dict.items()
+            ]
+
+            document = ParsedDocument(
+                metadata=metadata,
+                sections=parsed_sections,
+            )
+
+            # 4. Index Document
+            await pipeline.process_document(document, show_progress=False)
+
+        logger.info(f"Ingestion successfully completed for {ticker}")
+    except Exception as e:
+        logger.exception(f"Error during ingestion pipeline for {ticker}: {e}")
+
+
+@app.post("/ingest", status_code=202)
+async def ingest_document(
+    request: IngestRequest,
+    background_tasks: BackgroundTasks,
+    edgar_client: EdgarClient = Depends(get_edgar_client),
+    downloader: FilingDownloader = Depends(get_filing_downloader),
+    pipeline: IndexingPipeline = Depends(get_indexing_pipeline),
+) -> dict[str, str]:
+    """Trigger the ingestion pipeline for a ticker."""
+    try:
+        cik = await edgar_client.get_cik_from_ticker(request.ticker)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+        
+    background_tasks.add_task(
+        run_ingestion_pipeline,
+        ticker=request.ticker.upper(),
+        cik=cik,
+        downloader=downloader,
+        pipeline=pipeline,
+    )
+    
+    return {
+        "status": "accepted",
+        "message": f"Ingestion started in background for ticker {request.ticker.upper()}",
+    }

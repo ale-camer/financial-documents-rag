@@ -60,6 +60,8 @@ class EdgarClient:
             rate=rate_limit_per_sec, capacity=rate_limit_per_sec
         )
 
+        self._tickers_cache: dict[str, str] | None = None
+
         headers = {
             "User-Agent": self.user_agent,
             "Accept-Encoding": "gzip, deflate",
@@ -218,6 +220,32 @@ class EdgarClient:
         """
         cik_str = str(cik).strip().zfill(10)
         return await self.get_json(f"/submissions/CIK{cik_str}.json")
+
+    async def get_cik_from_ticker(self, ticker: str) -> str:
+        """Resolve a company ticker to its zero-padded CIK.
+
+        Args:
+            ticker: Company ticker symbol (e.g., AAPL).
+
+        Returns:
+            str: 10-digit zero-padded CIK.
+
+        Raises:
+            ValueError: If the ticker is not found.
+        """
+        if self._tickers_cache is None:
+            url = "https://www.sec.gov/files/company_tickers.json"
+            data = await self.get_json(url)
+            self._tickers_cache = {
+                entry["ticker"].upper(): str(entry["cik_str"]).zfill(10)
+                for entry in data.values()
+            }
+
+        ticker_upper = ticker.upper()
+        if ticker_upper not in self._tickers_cache:
+            raise ValueError(f"Ticker '{ticker}' not found in SEC database.")
+
+        return self._tickers_cache[ticker_upper]
 
     async def close(self) -> None:
         """Close the underlying HTTP client session."""
