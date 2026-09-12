@@ -9,12 +9,14 @@ from src.indexing.exceptions import (
     TokenLimitExceededError,
 )
 from src.indexing.models import DocumentChunk
+from src.indexing.pipeline import IndexingPipeline
 
 __all__ = [
     "DocumentChunk",
     "EmbeddingService",
     "EmbeddingServiceError",
     "IndexingError",
+    "IndexingPipeline",
     "RateLimitExceededError",
     "SectionAwareChunker",
     "TokenLimitExceededError",
