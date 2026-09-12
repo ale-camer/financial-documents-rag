@@ -1,44 +1,21 @@
 """Integration tests for VectorStoreClient against live PostgreSQL and pgvector."""
 
-from uuid import uuid4
+import random
 
-import psycopg
 import pytest
 
 from src.indexing.models import DocumentChunk
 from src.ingestion.models import FilingMetadata
 from src.storage.vector_store import (
     VectorStoreClient,
-    _build_default_connection_string,
-)
-
-
-def _is_db_reachable() -> bool:
-    """Check if PostgreSQL database is reachable."""
-    try:
-        conninfo = _build_default_connection_string()
-        with (
-            psycopg.connect(conninfo, connect_timeout=2) as conn,
-            conn.cursor() as cur,
-        ):
-            cur.execute("SELECT 1;")
-            return True
-    except Exception:
-        return False
-
-
-db_required = pytest.mark.skipif(
-    not _is_db_reachable(),
-    reason="PostgreSQL / pgvector database is not accessible.",
 )
 
 
 @pytest.mark.asyncio
-@db_required
 async def test_full_crud_lifecycle_live_pgvector() -> None:
     """Verify document upsert, chunk storage, embedding, search, and delete."""
     async with VectorStoreClient() as client:
-        unique_acc = f"0000320193-23-{uuid4().hex[:6]}"
+        unique_acc = f"0000320193-23-{random.randint(0, 999999):06d}"
         meta = FilingMetadata(
             cik="0000320193",
             ticker="AAPL",
@@ -77,11 +54,10 @@ async def test_full_crud_lifecycle_live_pgvector() -> None:
 
 
 @pytest.mark.asyncio
-@db_required
 async def test_cascade_delete_live_pgvector() -> None:
     """Verify cascade delete removes chunks and embeddings on document delete."""
     async with VectorStoreClient() as client:
-        unique_acc = f"0000789019-23-{uuid4().hex[:6]}"
+        unique_acc = f"0000789019-23-{random.randint(0, 999999):06d}"
         meta = FilingMetadata(
             cik="0000789019",
             ticker="MSFT",
@@ -114,11 +90,10 @@ async def test_cascade_delete_live_pgvector() -> None:
 
 
 @pytest.mark.asyncio
-@db_required
 async def test_similarity_search_top_k_ordering() -> None:
     """Verify similarity search returns nearest vector first."""
     async with VectorStoreClient() as client:
-        unique_acc = f"0001018724-23-{uuid4().hex[:6]}"
+        unique_acc = f"0001018724-23-{random.randint(0, 999999):06d}"
         meta = FilingMetadata(
             cik="0001018724",
             ticker="AMZN",

@@ -1,7 +1,7 @@
 """Integration tests for IndexingPipeline against live PostgreSQL and pgvector."""
 
+import random
 from collections.abc import Sequence
-from uuid import uuid4
 
 import pytest
 
@@ -24,34 +24,10 @@ class MockEmbeddingService(EmbeddingService):
         return [[self.value] * 1536 for _ in chunks]
 
 
-def _is_db_reachable() -> bool:
-    """Check if PostgreSQL database is reachable."""
-    try:
-        import psycopg
-
-        from src.storage.vector_store import _build_default_connection_string
-
-        conninfo = _build_default_connection_string()
-        with (
-            psycopg.connect(conninfo, connect_timeout=2) as conn,
-            conn.cursor() as cur,
-        ):
-            cur.execute("SELECT 1;")
-            return True
-    except Exception:
-        return False
-
-
-db_required = pytest.mark.skipif(
-    not _is_db_reachable(),
-    reason="PostgreSQL / pgvector database is not accessible.",
-)
-
-
 @pytest.fixture
 def dummy_document() -> ParsedDocument:
     """Create a sample 10-K document."""
-    unique_acc = f"0000320193-23-{uuid4().hex[:6]}"
+    unique_acc = f"0000320193-23-{random.randint(0, 999999):06d}"
     metadata = FilingMetadata(
         cik="0000320193",
         ticker="AAPL",
@@ -80,7 +56,6 @@ def dummy_document() -> ParsedDocument:
 
 
 @pytest.mark.asyncio
-@db_required
 async def test_indexing_pipeline_end_to_end(dummy_document: ParsedDocument) -> None:
     """Run process_document and verify database state."""
     chunker = SectionAwareChunker(chunk_size=128, chunk_overlap=16)
@@ -115,7 +90,6 @@ async def test_indexing_pipeline_end_to_end(dummy_document: ParsedDocument) -> N
 
 
 @pytest.mark.asyncio
-@db_required
 async def test_indexing_pipeline_idempotency(dummy_document: ParsedDocument) -> None:
     """Re-index the same document and ensure chunks/embeddings are updated."""
     chunker = SectionAwareChunker(chunk_size=128, chunk_overlap=16)
