@@ -147,7 +147,16 @@ def test_migration_runner_skips_already_applied(
     mock_cursor: MagicMock,
 ) -> None:
     """Verify apply_migrations does not re-apply already executed migrations."""
-    mock_cursor.fetchall.return_value = [("001_initial_schema",)]
+    import os
+
+    # Dynamically get all current migration files to mock them as applied
+    migrations_dir = get_migrations_dir()
+    all_migrations = [
+        (f.replace(".sql", ""),)
+        for f in os.listdir(migrations_dir)
+        if f.endswith(".sql")
+    ]
+    mock_cursor.fetchall.return_value = all_migrations
 
     applied = apply_migrations(mock_conn)
 

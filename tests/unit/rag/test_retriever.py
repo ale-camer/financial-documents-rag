@@ -6,7 +6,8 @@ from uuid import uuid4
 import pytest
 
 from src.indexing.embeddings import EmbeddingService
-from src.rag.retriever import SemanticRetriever
+from src.rag.models import RetrievedChunk
+from src.rag.retriever import HybridRetriever, KeywordRetriever, SemanticRetriever
 from src.storage.models import SearchResult
 from src.storage.vector_store import VectorStoreClient
 
@@ -117,3 +118,113 @@ async def test_retrieve_empty_query(
         await retriever.retrieve("")
 
     mock_vector_store.similarity_search.assert_not_called()
+
+
+@pytest.fixture
+def mock_keyword_retriever() -> MagicMock:
+    """Mock KeywordRetriever."""
+    retriever = MagicMock(spec=KeywordRetriever)
+    retriever.retrieve = AsyncMock(return_value=[])
+    return retriever
+
+
+@pytest.fixture
+def mock_semantic_retriever() -> MagicMock:
+    """Mock SemanticRetriever."""
+    retriever = MagicMock(spec=SemanticRetriever)
+    retriever.retrieve = AsyncMock(return_value=[])
+    return retriever
+
+
+@pytest.mark.asyncio
+async def test_keyword_retrieve_success(
+    mock_vector_store: MagicMock,
+) -> None:
+    """Test KeywordRetriever successful retrieval."""
+    mock_vector_store.keyword_search = AsyncMock(
+        return_value=[
+            SearchResult(
+                chunk_id=uuid4(),
+                document_id=uuid4(),
+                content="Dummy keyword content",
+                section_name="item_1",
+                chunk_index=0,
+                similarity=0.9,
+                document_metadata={},
+            )
+        ]
+    )
+
+    retriever = KeywordRetriever(vector_store=mock_vector_store)
+    results = await retriever.retrieve("test keyword", top_k=1)
+
+    mock_vector_store.keyword_search.assert_called_once_with(
+        query="test keyword",
+        top_k=1,
+        filters=None,
+    )
+    assert len(results) == 1
+    assert results[0].content == "Dummy keyword content"
+
+
+@pytest.mark.asyncio
+async def test_hybrid_retrieve_success(
+    mock_semantic_retriever: MagicMock,
+    mock_keyword_retriever: MagicMock,
+) -> None:
+    """Test HybridRetriever combines and deduplicates results."""
+    shared_id = uuid4()
+
+    mock_semantic_retriever.retrieve.return_value = [
+        RetrievedChunk(
+            chunk_id=shared_id,
+            document_id=uuid4(),
+            content="Shared chunk",
+            section_name="item_1",
+            chunk_index=0,
+            similarity=0.9,
+            document_metadata={},
+        ),
+        RetrievedChunk(
+            chunk_id=uuid4(),
+            document_id=uuid4(),
+            content="Semantic only",
+            section_name="item_2",
+            chunk_index=1,
+            similarity=0.8,
+            document_metadata={},
+        ),
+    ]
+
+    mock_keyword_retriever.retrieve.return_value = [
+        RetrievedChunk(
+            chunk_id=shared_id,
+            document_id=uuid4(),
+            content="Shared chunk",
+            section_name="item_1",
+            chunk_index=0,
+            similarity=0.95,
+            document_metadata={},
+        ),
+        RetrievedChunk(
+            chunk_id=uuid4(),
+            document_id=uuid4(),
+            content="Keyword only",
+            section_name="item_3",
+            chunk_index=2,
+            similarity=0.85,
+            document_metadata={},
+        ),
+    ]
+
+    retriever = HybridRetriever(
+        semantic_retriever=mock_semantic_retriever,
+        keyword_retriever=mock_keyword_retriever,
+    )
+
+    results = await retriever.retrieve("test hybrid", top_k=5)
+
+    assert len(results) == 3
+    # First chunk should be the shared one from semantic retriever (due to interleaving)
+    assert results[0].chunk_id == shared_id
+    assert results[0].content == "Shared chunk"

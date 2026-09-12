@@ -307,6 +307,92 @@ class VectorStoreClient:
                 f"Database error during vector search: {err}"
             ) from err
 
+    async def keyword_search(
+        self,
+        query: str,
+        top_k: int = 5,
+        filters: dict[str, Any] | None = None,
+    ) -> list[SearchResult]:
+        """Perform BM25 keyword search using PostgreSQL full-text search."""
+        if top_k <= 0:
+            raise ValueError("top_k must be a positive integer.")
+        if not query.strip():
+            return []
+
+        pool = self._get_pool()
+
+        where_clauses: list[str] = [
+            "c.content_tsvector @@ plainto_tsquery('english', %s)"
+        ]
+        filter_params: list[Any] = [query]
+
+        if filters:
+            allowed_column_map = {
+                "ticker": "d.ticker",
+                "cik": "d.cik",
+                "section_name": "c.section_name",
+                "form_type": "d.form_type",
+                "period": "d.period",
+            }
+            for key, val in filters.items():
+                if key in allowed_column_map and val is not None:
+                    col = allowed_column_map[key]
+                    where_clauses.append(f"{col} = %s")
+                    filter_params.append(val)
+
+        where_sql = "WHERE " + " AND ".join(where_clauses)
+
+        sql_query = f"""
+        SELECT
+            c.id AS chunk_id,
+            c.document_id,
+            c.content,
+            c.section_name,
+            c.chunk_index,
+            ts_rank(c.content_tsvector, plainto_tsquery('english', %s)) AS similarity,
+            d.cik,
+            d.ticker,
+            d.period,
+            d.form_type,
+            d.accession_number
+        FROM chunks c
+        JOIN documents d ON c.document_id = d.id
+        {where_sql}
+        ORDER BY similarity DESC
+        LIMIT %s;
+        """
+        params: list[Any] = [query, *filter_params, top_k]
+
+        try:
+            async with pool.connection() as conn, conn.cursor() as cur:
+                await cur.execute(sql_query, tuple(params))
+                rows = await cur.fetchall()
+
+            results: list[SearchResult] = []
+            for row in rows:
+                results.append(
+                    SearchResult(
+                        chunk_id=UUID(str(row[0])),
+                        document_id=UUID(str(row[1])),
+                        content=str(row[2]),
+                        section_name=str(row[3]),
+                        chunk_index=int(row[4]),
+                        similarity=float(row[5]),
+                        document_metadata={
+                            "cik": str(row[6]),
+                            "ticker": row[7],
+                            "period": str(row[8]),
+                            "form_type": str(row[9]),
+                            "accession_number": str(row[10]),
+                        },
+                    )
+                )
+            return results
+        except psycopg.Error as err:
+            raise VectorStoreError(
+                f"Database error during keyword search: {err}"
+            ) from err
+
     async def delete_document(self, document_id: UUID) -> bool:
         """Delete document by UUID, cascading to chunks and embeddings."""
         pool = self._get_pool()

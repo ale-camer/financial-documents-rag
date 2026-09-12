@@ -416,3 +416,51 @@ async def test_delete_document_not_found(
 
     deleted = await client.delete_document(uuid4())
     assert deleted is False
+
+
+@pytest.mark.asyncio
+async def test_keyword_search_success(
+    mock_pool: MockAsyncPool,
+    mock_cursor: MockAsyncCursor,
+) -> None:
+    """Verify keyword_search executes query and returns SearchResult."""
+    c_id, d_id = uuid4(), uuid4()
+    mock_cursor.fetchall.return_value = [
+        (
+            str(c_id),
+            str(d_id),
+            "Keyword chunk content",
+            "item_1",
+            0,
+            0.85,
+            "0000320193",
+            "AAPL",
+            "2023-09-30",
+            "10-K",
+            "0000320193-23-000106",
+        )
+    ]
+
+    pool_mock = cast(AsyncConnectionPool, mock_pool)
+    client = VectorStoreClient(pool=pool_mock)
+
+    results = await client.keyword_search("keyword", top_k=2)
+
+    assert len(results) == 1
+    res = results[0]
+    assert res.chunk_id == c_id
+    assert res.similarity == 0.85
+    assert res.content == "Keyword chunk content"
+
+
+@pytest.mark.asyncio
+async def test_keyword_search_empty_query(
+    mock_pool: MockAsyncPool,
+    mock_cursor: MockAsyncCursor,
+) -> None:
+    """Verify keyword_search returns empty list on empty query."""
+    pool_mock = cast(AsyncConnectionPool, mock_pool)
+    client = VectorStoreClient(pool=pool_mock)
+    results = await client.keyword_search("   ", top_k=2)
+    assert results == []
+    mock_cursor.execute.assert_not_called()
