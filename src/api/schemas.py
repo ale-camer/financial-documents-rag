@@ -21,6 +21,10 @@ class QueryResponse(BaseModel):
     source_documents: list[dict[str, Any]] = Field(
         default_factory=list, description="The chunks used to generate the answer"
     )
+    citations: list[dict[str, Any]] = Field(
+        default_factory=list,
+        description="Structured citations extracted from the answer",
+    )
 
 
 class IngestRequest(BaseModel):

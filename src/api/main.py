@@ -8,6 +8,7 @@ from fastapi import Depends, FastAPI, HTTPException
 
 from src.api.dependencies import get_rag_pipeline, get_vector_store
 from src.api.schemas import IngestRequest, QueryRequest, QueryResponse
+from src.rag.citations import format_answer_with_citations
 from src.rag.pipeline import RAGPipeline
 
 logger = logging.getLogger(__name__)
@@ -46,10 +47,19 @@ async def query_documents(
     """Process a natural language query using the RAG pipeline."""
     try:
         result = await pipeline.ask(query=request.query, filters=request.filters)
+
+        formatted_result = format_answer_with_citations(
+            result["answer"], result["source_documents"]
+        )
+
         sources = [
             chunk.model_dump(mode="json") for chunk in result["source_documents"]
         ]
-        return QueryResponse(answer=result["answer"], source_documents=sources)
+        return QueryResponse(
+            answer=formatted_result["answer"],
+            source_documents=sources,
+            citations=formatted_result["citations"],
+        )
     except Exception as e:
         logger.exception("Error processing query")
         raise HTTPException(status_code=500, detail="Internal server error") from e

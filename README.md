@@ -107,7 +107,7 @@ API docs available at: `http://localhost:8000/docs`
 | M1: SEC EDGAR Ingestion & Document Parsing | 🔲 Planned |
 | M2: Semantic Chunking, Embeddings & pgvector Storage | 🔲 Planned |
 | M3: Hybrid Retrieval & RAG Generation Pipeline | 🔲 Planned |
-| M4: FastAPI Service, Citation Layer & Evaluation | 🔲 Planned |
+| M4: FastAPI Service, Citation Layer & Evaluation | ✅ Completed |
 | M5: CI/CD, Observability & Containerized Deployment | 🔲 Planned |
 
 ## Repository Structure

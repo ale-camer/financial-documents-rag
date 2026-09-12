@@ -48,7 +48,7 @@ def test_query_endpoint_success(client: TestClient) -> None:
 
     mock_pipeline = AsyncMock()
     mock_pipeline.ask.return_value = {
-        "answer": "This is a test answer.",
+        "answer": f"This is a test answer. [Document {mock_chunk.document_id}]",
         "source_documents": [mock_chunk],
     }
 
@@ -60,6 +60,8 @@ def test_query_endpoint_success(client: TestClient) -> None:
 
     assert response.status_code == 200
     data = response.json()
-    assert data["answer"] == "This is a test answer."
+    assert "This is a test answer." in data["answer"]
     assert len(data["source_documents"]) == 1
     assert data["source_documents"][0]["content"] == "Test content"
+    assert len(data["citations"]) == 1
+    assert data["citations"][0]["document_id"] == str(mock_chunk.document_id)
