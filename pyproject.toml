@@ -23,6 +23,9 @@ dependencies = [
     "tiktoken>=0.7.0",
     "openai>=1.30.0",
     "tqdm>=4.66.0",
+    "langchain>=0.3.0",
+    "langchain-core>=0.3.0",
+    "langchain-openai>=0.2.0",
 ]
 
 [project.optional-dependencies]
