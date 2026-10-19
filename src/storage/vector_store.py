@@ -28,6 +28,9 @@ def _format_vector(vector: Sequence[float]) -> str:
 
 def _build_default_connection_string() -> str:
     """Construct PostgreSQL connection string from environment variables."""
+    raw_url = os.getenv("DATABASE_URL") or os.getenv("POSTGRES_URL")
+    if raw_url:
+        return raw_url
     host = os.getenv("POSTGRES_HOST", "localhost")
     port = os.getenv("POSTGRES_PORT", "5432")
     db = os.getenv("POSTGRES_DB", "financial_rag")

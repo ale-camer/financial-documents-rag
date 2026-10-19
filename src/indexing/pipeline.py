@@ -1,6 +1,9 @@
 """Indexing pipeline orchestrating chunker, embeddings, and vector store."""
 
+from __future__ import annotations
+
 import asyncio
+from typing import TYPE_CHECKING
 from uuid import UUID
 
 from tqdm.asyncio import tqdm
@@ -9,7 +12,9 @@ from src.indexing.chunker import SectionAwareChunker
 from src.indexing.embeddings import EmbeddingService
 from src.indexing.models import DocumentChunk
 from src.ingestion.models import ParsedDocument
-from src.storage.vector_store import VectorStoreClient
+
+if TYPE_CHECKING:
+    from src.storage.vector_store import VectorStoreClient
 
 
 class IndexingPipeline:
